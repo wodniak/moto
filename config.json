@@ -2,10 +2,6 @@
     "vehicle" : [
         {
             "brand" : "honda",
-            "model" : "cm"
-        },
-        {
-            "brand" : "honda",
             "model" : "hornet"
         },
         {

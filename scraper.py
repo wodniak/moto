@@ -4,6 +4,7 @@ from contextlib import closing
 from bs4 import BeautifulSoup
 import json
 from time import sleep
+
 class CMoto(object):
     """
     Motorcycle class to keep all data regarding each machine
@@ -80,10 +81,23 @@ class CScraper(object):
         """
         motors = []     #list of all motorcycles
         for url in self._makeUrl():     #for each motorcycle type in config there is 1 url
-            page = self._simpleGetUrl(url)      
-            soup = BeautifulSoup(page, 'html.parser')
-            for moto in soup.select('article'):
-                motors.append(CMoto(moto))
+            while(True):
+                isNextPage = False  #switch for changing pages
+                page = self._simpleGetUrl(url)      
+                soup = BeautifulSoup(page, 'html.parser')
+                
+                for moto in soup.select('article'):
+                    motors.append(CMoto(moto))
+                
+                #check if next page exists
+                link = soup.find('link', {'rel' : 'next'})
+                if link is not None:
+                    isNextPage = True   #set flag 
+                    url = link.get('href')  #get next page url
+
+                #end loop when there is no more pages
+                if not isNextPage:
+                    break
 
         return motors
 
@@ -95,7 +109,7 @@ class CScraper(object):
         """
         urls = []
         for moto in self.config['vehicle']:
-            urls.append(self.mainUrl + moto['brand'] + '/' + moto['model'] + '/')
+            urls.append(self.mainUrl + moto['brand'] + '/' + moto['model'] + '/?page=1')    #a little bit too much hardcoded stuff 
 
         return urls
 
@@ -143,7 +157,7 @@ def main():
 
     for x in range(len(motorList)): #debug print
         print(motorList[x].data)
-
+    print('Total number of parsed motorcycles : {}'.format(CMoto.numberOfMotors))
 
 
 #starting point
