@@ -6,7 +6,11 @@
         },
         {
             "brand" : "honda",
-            "model" : "cg"
+            "model" : "hornet"
+        },
+        {
+            "brand" : "honda",
+            "model" : "nx"
         }
     ]
 }
