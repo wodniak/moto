@@ -1,3 +1,24 @@
+"""
+OTOMOTO scrapper
+Downloads information about motorcycle offerts from otomoto.pl
+There is possibility to save data to file and plot it on different charts.
+
+How to configure:
+database:
+    save : <yes/no>
+    mode : <basic/detailed> - TBD
+    file : <csv>    - TBD
+
+plotter:
+    power : <on/off>
+    save  : <yes/no>
+    plot  : barplot, simpleplot, heatmapplot
+
+vehicle:
+    brand : <any>
+    model : <any>, all if not given
+"""
+
 from requests import get
 from requests.exceptions import RequestException
 from contextlib import closing
@@ -13,6 +34,7 @@ class CMoto(object):
     """
 
     numberOfMotors = 0      #moto object counter
+    counterModelNotSpecified = 0
 
     def __init__(self, rawData):
         """
@@ -34,12 +56,19 @@ class CMoto(object):
         }
  
         info = rawData.find_all('li', class_='offer-item__params-item')     #prodDate, mileage, motoType, engineCC(not always)
-        self.data['prodDate'] = int(info[0].text.strip('\n').replace(' ',''))
-        self.data['mileage']  = int(info[1].text.strip('\n').strip('km').replace(' ','')) 
-        self.data['price'] = int(rawData.find('span', class_='offer-price__number').text[:-4].replace(' ','').replace(',','.'))   #get rid of currency
-        self.data['brand'] = rawData.find('a', class_ = 'offer-title__link').text.strip().split(' ')[0]
-        self.data['model'] = rawData.find('a', class_ = 'offer-title__link').text.strip().split(' ')[1]
-        self.data['id'] = int(rawData.find('a', {'data-ad-id' : True}).get('data-ad-id').strip())
+        try:
+            self.data['id'] = int(rawData.find('a', {'data-ad-id' : True}).get('data-ad-id').strip())
+            self.data['brand'] = rawData.find('a', class_ = 'offer-title__link').text.strip().split(' ')[0]
+            self.data['model'] = rawData.find('a', class_ = 'offer-title__link').text.strip().split(' ')[1]
+            self.data['prodDate'] = int(info[0].text.strip('\n').replace(' ',''))
+            self.data['mileage']  = int(info[1].text.strip('\n').strip('km').replace(' ','')) 
+            self.data['price'] = int(rawData.find('span', class_='offer-price__number').text[:-4].replace(' ','').replace(',','.'))   #get rid of currency
+        except ValueError:  #problem z reszta PLN, line 40
+            print('{0} model not specified in {1} offert'.format(self.data['brand'], self.data['id']))
+            CMoto.counterModelNotSpecified += 1
+        except IndexError:  #problem with non specified model, line 42 
+            print('{0} model not specified in {1} offert'.format(self.data['brand'], self.data['id']))
+            CMoto.counterModelNotSpecified += 1
 
 #@! this solution sucks...
         #sometimes there is no engineCC given
@@ -111,7 +140,12 @@ class CScraper(object):
         """
         urls = []
         for moto in self.config['vehicle']:
-            urls.append(self.mainUrl + moto['brand'] + '/' + moto['model'] + '/?page=1')    #a little bit too much hardcoded stuff 
+            if moto.get('model') is None:
+                #get all models
+                urls.append(self.mainUrl + moto['brand'] + '/?page=1')
+            else:
+                #get specified model
+                urls.append(self.mainUrl + moto['brand'] + '/' + moto['model'] + '/?page=1')    #a little bit too much hardcoded stuff 
 
         return urls
 
@@ -153,6 +187,7 @@ class CScraper(object):
 class CDatabase(object):
     """
     Database of downloaded motorcycles
+    Save to file if config option "save" is "yes" 
     """ 
 
     def __init__(self, motoList):
@@ -171,14 +206,19 @@ class CDatabase(object):
         self.motoDatabase = self.motoDatabase[['id', 'brand', 'model', 'prodDate', 'price', 'motoType',
          'mileage', 'engineCC', 'desc' ]]
 
+        #save to file
+        # if CScraper.config['save'] == 'yes':
+        #     pass
+
 
     def showRecords(self):
         """
         Pretty-print of database
         """
-
         with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
             print(self.motoDatabase.to_string())
+
+
 
 class CPlotter(object):
     """
@@ -192,6 +232,7 @@ class CPlotter(object):
         sns.set()
         self.df = df.motoDatabase
 
+
     def simplePlot(self, x, y):
         """
         Create simple scatterplot
@@ -199,8 +240,25 @@ class CPlotter(object):
         @param y : data for y axis 
         """
         sns.lmplot(x, y, self.df, hue='model')
-        # sns.lmplot('prodDate', 'price', self.motoDatabase)
+        plt.ylim(0,10000)
+        plt.xlim(1980,2019)
         plt.show()
+
+    def heatmapPlot(self):
+        # Calculate correlations
+        corr = self.df.corr()
+        corr.drop('id')
+        # Heatmap
+        sns.heatmap(corr)
+        plt.show()
+
+
+    def barPlot(self, x):
+        sns.countplot(x=x, hue='model', data=self.df)
+        plt.xticks(rotation=-45)
+        plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+        plt.show()
+
 
 
 def main():
@@ -210,9 +268,13 @@ def main():
     motoDatabase.showRecords()
 
     print('Total number of parsed motorcycles : {}'.format(CMoto.numberOfMotors))
+    print('Model not specified in {0} offerts'.format(CMoto.counterModelNotSpecified))
 
     plotter = CPlotter(motoDatabase)
-    plotter.simplePlot('prodDate', 'price')
+    # plotter.simplePlot('prodDate', 'price')
+    # plotter.heatmapPlot()
+    plotter.barPlot('prodDate')
+
 
 #starting point
 if __name__ == '__main__':

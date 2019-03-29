@@ -1,13 +1,20 @@
 {
-    "mode" : "basic",
+    "database" : {
+        "save" : "no",
+        "mode" : "basic",
+        "file" : "csv"
+    },
+    "plotter" : {
+        "power" : "on",
+        "save"  : "yes",
+        "plot" : [
+                "barplot",
+                "simpleplot"
+        ]
+    },
     "vehicle" : [
         {
-            "brand" : "suzuki",
-            "model" : "gs"
-        },
-        {
-            "brand" : "bmw",
-            "model" : "f"
+            "brand" : "ktm"
         }
     ]
 }
