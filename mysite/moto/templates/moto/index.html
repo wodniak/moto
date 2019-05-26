@@ -11,8 +11,8 @@
 <p>Enter motorcycle name and click button to add it</p>
 <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add</button>
+    {{ form }}
+    <button class="btn btn-primary" type="submit" name="button" value="add_button">Add</button>
 </form>
 
 <p>List of motorcycles:</p>
@@ -26,7 +26,11 @@
     <p>No motorcycle names provided!</p>
 {% endif %}
 
-<button class="btn btn-primary" type="button" name="button">Submit</button>
+<form method="post">
+    {% csrf_token %}
+    <button class="btn btn-primary" type="submit" name="button" value="submit_button">Submit</button>
+</form>
+    
 
 {% endblock %}
         
