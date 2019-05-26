@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title>MotoScrapper</title>
+<h1>Welcome</h1>
+{% endblock %}
+
+
+{% block body %}
+
+<p>Enter motorcycle name and click button to add it</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add</button>
+</form>
+
+<p>List of motorcycles:</p>
+{% if moto_to_scrap %}
+    <ul>
+        {% for moto in moto_to_scrap %}
+            <li>{{ moto }}</li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No motorcycle names provided!</p>
+{% endif %}
+
+<button class="btn btn-primary" type="button" name="button">Submit</button>
+
+{% endblock %}
+        
