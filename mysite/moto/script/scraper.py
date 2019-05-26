@@ -27,6 +27,7 @@ import json
 import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
+import os
 
 class CMoto(object):
     """
@@ -93,13 +94,15 @@ class CScraper(object):
     mainUrl = 'https://www.otomoto.pl/motocykle-i-quady/'
     config = None
 
-    def __init__(self, configPath):
+    def __init__(self):
         """
         Parse json config file
         """
+        self.dir_path = os.path.dirname(os.path.realpath(__file__))
+        path_to_file = os.path.join(self.dir_path, "config.json")
 
         try:
-            with open(configPath, 'r') as f:
+            with open(path_to_file, 'r') as f:
                 self.config = json.load(f)
         except ValueError:
             print('Decoding JSON config file has failed')
@@ -261,8 +264,8 @@ class CPlotter(object):
 
 
 
-def main():
-    scraper = CScraper('config.json')   #parse json
+def run():
+    scraper = CScraper()   #parse json
     motoList = scraper.downloadAllMotors()     #download data and parse it to objects
     motoDatabase = CDatabase(motoList)
     motoDatabase.showRecords()
@@ -275,7 +278,8 @@ def main():
     # plotter.heatmapPlot()
     plotter.barPlot('prodDate')
 
-
+def main():
+    pass
 #starting point
 if __name__ == '__main__':
     main()

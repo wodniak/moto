@@ -11,6 +11,7 @@ from django.http import Http404
 
 from .forms import MotoInputForm
 from .models import CMotorcycles
+from .script.scraper import run
 
 class MotoView(TemplateView):
     """
@@ -77,7 +78,10 @@ class MotoView(TemplateView):
         with open(path_to_file, 'w') as config_file:
             json.dump(json_dict, config_file, indent=4, sort_keys=True)
 
+        #execute script
+        run()
 
+        
 def detail_moto(request, idx):
     """
         show detailed info about motorycycle
