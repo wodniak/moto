@@ -1,1 +1,23 @@
-{{ detail }}
+{% extends 'base.html' %}
+
+{% block head %}
+<title>MotoScrapper - results</title>
+<div>
+    <h2>This page contains results of your search</h2>
+    <p>To go back click <a href=" url ">here</a></p>
+</div>
+{% endblock %}
+
+
+{% block body %}
+    <div class="row">
+        <div class="col-sm-8">
+            {% autoescape off %}
+            {{ html_moto_table | safe }}
+            {% endautoescape %}
+        </div>
+        <div class="col-sm-4">
+            <h2>Graphs</h2>
+        </div>
+    </div>
+{% endblock %}

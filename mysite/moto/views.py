@@ -18,8 +18,12 @@ class MotoView(TemplateView):
     main page
     """
     template_name = 'moto/index.html'
+    next_template_name = 'moto/detail.html'
     moto_to_scrap = []
 
+#----------------------------------------------------
+#   GET request
+#----------------------------------------------------
     def get(self, request):
         """
             Process GET request
@@ -28,8 +32,12 @@ class MotoView(TemplateView):
         context = {'form' : form,
                    'moto_to_scrap': self.moto_to_scrap}
         return render(request, self.template_name, context)
+#----------------------------------------------------
+#----------------------------------------------------
 
-
+#----------------------------------------------------
+#   POST request
+#----------------------------------------------------
     def post(self, request):
         """
             Process POST request
@@ -37,6 +45,18 @@ class MotoView(TemplateView):
         handler = request.POST.get('button')
         handler = getattr(self, handler, lambda: "Invalid button handler: {}".format(handler))
         return handler(request)
+
+
+    def clear_button(self, request):
+        """
+            Function handler to button clear_button
+            Reset values in search list
+        """
+        form = MotoInputForm()
+        self.moto_to_scrap.clear()
+        context = {'form' : form,
+                   'moto_to_scrap': self.moto_to_scrap}
+        return render(request, self.template_name, context)
 
 
     def add_button(self, request):
@@ -79,9 +99,16 @@ class MotoView(TemplateView):
             json.dump(json_dict, config_file, indent=4, sort_keys=True)
 
         #execute script
-        run()
+        moto_data_base = run()
+        html_moto_table = moto_data_base.data_to_html()
+        context = {'html_moto_table' : html_moto_table,
+                   'moto_to_scrap': self.moto_to_scrap}
+        return render(request, self.next_template_name, context)
+#----------------------------------------------------
+#----------------------------------------------------
 
-        
+
+
 def detail_moto(request, idx):
     """
         show detailed info about motorycycle
