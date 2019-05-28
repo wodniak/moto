@@ -3,6 +3,7 @@
 """
 from django import forms
 
+
 class MotoInputForm(forms.Form):
     """
         Generic form

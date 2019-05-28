@@ -1,23 +1,42 @@
-{% extends 'base.html' %}
-
-{% block head %}
+{% extends 'base.html' %} {% block head %}
 <title>MotoScrapper - results</title>
 <div>
     <h2>This page contains results of your search</h2>
-    <p>To go back click <a href=" url ">here</a></p>
+    <p>To go back click <a href="">here</a></p>
 </div>
-{% endblock %}
-
-
-{% block body %}
-    <div class="row">
-        <div class="col-sm-8">
-            {% autoescape off %}
-            {{ html_moto_table | safe }}
-            {% endautoescape %}
-        </div>
-        <div class="col-sm-4">
-            <h2>Graphs</h2>
-        </div>
+{% endblock %} {% block body %}
+<div class="row">
+    <div class="col-sm-8">
+        {% if moto_to_scrap %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Nr</th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Brand&Model</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Prod Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for moto in CMotorcycles %}
+                <tr>
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ moto.id }}</td>
+                    <td>{{ moto.brand }} {{ moto.model }}</td>
+                    <td>{{ moto.price }}</td>
+                    <td>{{ moto.proddate }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No data to show</p>
+        {% endif %}
     </div>
+    <div class="col-sm-4">
+        <h2>Graphs</h2>
+        <img src="barplot.png" width="500px" />
+    </div>
+</div>
 {% endblock %}

@@ -25,16 +25,17 @@ from bs4 import BeautifulSoup
 from matplotlib import pyplot as plt
 import seaborn as sns
 import pandas as pd
-
+import sqlite3
 from requests import get
 from requests.exceptions import RequestException
+
 
 class CMoto(object):
     """
     Motorcycle class to keep all data regarding each machine
     """
 
-    numberOfMotors = 0      #moto object counter
+    numberOfMotors = 0  # moto object counter
     counterModelNotSpecified = 0
 
     def __init__(self, rawData):
@@ -42,49 +43,58 @@ class CMoto(object):
         Fill all information regarding motorcycle
         @param rawData : xml with basic motorcycle parameters
         """
-        CMoto.numberOfMotors += 1     #increment for each new object
+        CMoto.numberOfMotors += 1  # increment for each new object
 
         self.data = {
-            'id'       : None,
-            'brand'    : None,
-            'model'    : None,
-            'desc'     : None,
-            'prodDate' : None,
-            'price'    : None,
-            'motoType' : None,
-            'mileage'  : None,
-            'engineCC' : None
+            'id': None,
+            'brand': None,
+            'model': None,
+            'desc': None,
+            'prodDate': None,
+            'price': None,
+            'motoType': None,
+            'mileage': None,
+            'engineCC': None
         }
 
         #prodDate, mileage, motoType, engineCC(not always)
         info = rawData.find_all('li', class_='offer-item__params-item')
         try:
-            self.data['id'] = int(rawData.find('a', {'data-ad-id' : True}).get('data-ad-id').strip())
-            self.data['brand'] = rawData.find('a', class_='offer-title__link').text.strip().split(' ')[0]
-            self.data['model'] = rawData.find('a', class_='offer-title__link').text.strip().split(' ')[1]
-            self.data['prodDate'] = int(info[0].text.strip('\n').replace(' ', ''))
-            self.data['mileage'] = int(info[1].text.strip('\n').strip('km').replace(' ', ''))
-            self.data['price'] = int(rawData.find('span', class_='offer-price__number').text[:-4].replace(' ', '').replace(',', '.'))   #get rid of currency
-        except ValueError:  #problem z reszta PLN, line 40
-            print('{0} model not specified in {1} offert'.format(self.data['brand'], self.data['id']))
+            self.data['id'] = int(rawData.find(
+                'a', {'data-ad-id': True}).get('data-ad-id').strip())
+            self.data['brand'] = rawData.find(
+                'a', class_='offer-title__link').text.strip().split(' ')[0]
+            self.data['model'] = rawData.find(
+                'a', class_='offer-title__link').text.strip().split(' ')[1]
+            self.data['prodDate'] = int(
+                info[0].text.strip('\n').replace(' ', ''))
+            self.data['mileage'] = int(info[1].text.strip(
+                '\n').strip('km').replace(' ', ''))
+            self.data['price'] = int(rawData.find(
+                'span', class_='offer-price__number').text[:-4].replace(' ', '').replace(',', '.'))  # get rid of currency
+        except ValueError:  # problem z reszta PLN, line 40
+            print('{0} model not specified in {1} offert'.format(
+                self.data['brand'], self.data['id']))
             CMoto.counterModelNotSpecified += 1
-        except IndexError:  #problem with non specified model, line 42
-            print('{0} model not specified in {1} offert'.format(self.data['brand'], self.data['id']))
+        except IndexError:  # problem with non specified model, line 42
+            print('{0} model not specified in {1} offert'.format(
+                self.data['brand'], self.data['id']))
             CMoto.counterModelNotSpecified += 1
 
-#@! this solution sucks...
-        #sometimes there is no engineCC given
+# @! this solution sucks...
+        # sometimes there is no engineCC given
         if len(info) == 4:
-            self.data['engineCC'] = int(info[2].text.strip('\n').strip('cm3').replace(' ', ''))
+            self.data['engineCC'] = int(info[2].text.strip(
+                '\n').strip('cm3').replace(' ', ''))
             self.data['motoType'] = info[3].text.strip('\n')
         else:
             self.data['motoType'] = info[2].text.strip('\n')
 
-#@! this solution sucks...
-        #sometimes there is no description in offert
+# @! this solution sucks...
+        # sometimes there is no description in offert
         if rawData.find('h3', class_='offer-item__subtitle') is not None:
-            self.data['desc'] = rawData.find('h3', class_='offer-item__subtitle').text
-
+            self.data['desc'] = rawData.find(
+                'h3', class_='offer-item__subtitle').text
 
 
 class CScraper(object):
@@ -108,35 +118,33 @@ class CScraper(object):
         except ValueError:
             print('Decoding JSON config file has failed')
 
-
     def downloadAllMotors(self):
         """
         Download all pages of motorcycle types given in config json and use them
         to create motorcycle objects
         @return motors : list of initialized motorcycle objects scrapped from web
         """
-        motors = []     #list of all motorcycles
-        for url in self._makeUrl():     #for each motorcycle type in config there is 1 url
+        motors = []  # list of all motorcycles
+        for url in self._makeUrl():  # for each motorcycle type in config there is 1 url
             while True:
-                is_next_page = False  #switch for changing pages
+                is_next_page = False  # switch for changing pages
                 page = self._simpleGetUrl(url)
                 soup = BeautifulSoup(page, 'html.parser')
 
                 for moto in soup.select('article'):
                     motors.append(CMoto(moto))
 
-                #check if next page exists
-                link = soup.find('link', {'rel' : 'next'})
+                # check if next page exists
+                link = soup.find('link', {'rel': 'next'})
                 if link is not None:
-                    is_next_page = True   #set flag
-                    url = link.get('href')  #get next page url
+                    is_next_page = True  # set flag
+                    url = link.get('href')  # get next page url
 
-                #end loop when there is no more pages
+                # end loop when there is no more pages
                 if not is_next_page:
                     break
 
         return motors
-
 
     def _makeUrl(self):
         """
@@ -146,15 +154,15 @@ class CScraper(object):
         urls = []
         for moto in self.config['vehicle']:
             if moto.get('model') is None:
-                #get all models
+                # get all models
                 urls.append(self.mainUrl + moto['brand'] + '/?page=1')
             else:
-                #get specified model
-                #a little bit too much hardcoded stuff
-                urls.append(self.mainUrl + moto['brand'] + '/' + moto['model'] + '/?page=1')
+                # get specified model
+                # a little bit too much hardcoded stuff
+                urls.append(self.mainUrl +
+                            moto['brand'] + '/' + moto['model'] + '/?page=1')
 
         return urls
-
 
     def _simpleGetUrl(self, url):
         """
@@ -163,11 +171,11 @@ class CScraper(object):
         text content, otherwise return None.
         """
         try:
-            #without it page responds with None
+            # without it page responds with None
             headers = {
                 'User-Agent': 'alamakota',
                 'From': 'alama@kota.com'
-                }
+            }
 
             with closing(get(url, headers=headers, stream=True)) as resp:
                 if self._isGoodResponse(resp):
@@ -176,9 +184,9 @@ class CScraper(object):
                     return None
 
         except RequestException as exception:
-            print('Error during requests to {0} : {1}'.format(url, str(exception)))
+            print('Error during requests to {0} : {1}'.format(
+                url, str(exception)))
             return None
-
 
     def _isGoodResponse(self, resp):
         """
@@ -203,22 +211,29 @@ class CDatabase(object):
 
         @param motoList : list of CMoto objects
         """
-        motoData = []   #list of dictionaries with useful data
+        motoData = []  # list of dictionaries with useful data
         for moto in motoList:
             motoData.append(moto.data)
 
         self.motoDatabase = pd.DataFrame(motoData)
-        #set order of columns
+        # set order of columns
         self.motoDatabase = self.motoDatabase[['id', 'brand', 'model', 'prodDate',
                                                'price', 'motoType', 'mileage',
                                                'engineCC', 'desc']]
 
+    def to_sql(self):
+        """
+            Save DataFrame to SQL table later used by Django Model
+        """
+        conn = sqlite3.connect("db.sqlite3")
+        self.motoDatabase.to_sql(
+            name='motorcycles', con=conn, if_exists='replace')
+
     def data_to_html(self):
         return self.motoDatabase.to_html()
-        #save to file
+        # save to file
         # if CScraper.config['save'] == 'yes':
         #     pass
-
 
     def showRecords(self):
         """
@@ -226,7 +241,6 @@ class CDatabase(object):
         """
         with pd.option_context('display.max_rows', None, 'display.max_columns', 10):
             print(self.motoDatabase.to_string())
-
 
 
 class CPlotter(object):
@@ -241,7 +255,6 @@ class CPlotter(object):
         sns.set()
         self.df = df.motoDatabase
 
-
     def simplePlot(self, x, y):
         """
         Create simple scatterplot
@@ -251,7 +264,6 @@ class CPlotter(object):
         sns.lmplot(x, y, self.df, hue='model')
         plt.ylim(0, 10000)
         plt.xlim(1980, 2019)
-        plt.show()
 
     def heatmapPlot(self):
         # Calculate correlations
@@ -261,23 +273,23 @@ class CPlotter(object):
         sns.heatmap(corr)
         plt.show()
 
-
     def barPlot(self, x):
         sns.countplot(x=x, hue='model', data=self.df)
         plt.xticks(rotation=-45)
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.show()
-
+        plt.savefig("moto/script/graph/barplot.png")
+        plt.clf()
 
 
 def run():
-    scraper = CScraper()   #parse json
-    motoList = scraper.downloadAllMotors()     #download data and parse it to objects
+    scraper = CScraper()  # parse json
+    motoList = scraper.downloadAllMotors()  # download data and parse it to objects
     motoDatabase = CDatabase(motoList)
     motoDatabase.showRecords()
 
     print('Total number of parsed motorcycles : {}'.format(CMoto.numberOfMotors))
-    print('Model not specified in {0} offerts'.format(CMoto.counterModelNotSpecified))
+    print('Model not specified in {0} offerts'.format(
+        CMoto.counterModelNotSpecified))
 
     plotter = CPlotter(motoDatabase)
     # plotter.simplePlot('prodDate', 'price')
@@ -285,8 +297,11 @@ def run():
     plotter.barPlot('prodDate')
     return motoDatabase
 
+
 def main():
     run()
-#starting point
+
+
+# starting point
 if __name__ == '__main__':
     main()

@@ -1,36 +1,51 @@
-{% extends 'base.html' %}
-
-{% block head %}
+{% extends 'base.html' %} {% block head %}
 <title>MotoScrapper</title>
 <h1>Welcome</h1>
-{% endblock %}
-
-
-{% block body %}
+{% endblock %} {% block body %}
 
 <p>Enter motorcycle name and click button to add it</p>
 <form method="post">
     {% csrf_token %}
     {{ form }}
-    <button class="btn btn-primary" type="submit" name="button" value="add_button">Add</button>
+    <button
+        class="btn btn-primary"
+        type="submit"
+        name="button"
+        value="add_button"
+    >
+        Add
+    </button>
 </form>
 
 <p>List of motorcycles:</p>
 {% if moto_to_scrap %}
-    <ul>
-        {% for moto in moto_to_scrap %}
-            <li>{{ moto }}</li>
-        {% endfor %}
-    </ul>
+<ul>
+    {% for moto in moto_to_scrap %}
+    <li>{{ moto }}</li>
+    {% endfor %}
+</ul>
 {% else %}
-    <p>No motorcycle names provided!</p>
+<p>No motorcycle names provided!</p>
 {% endif %}
 
 <form method="post">
     {% csrf_token %}
-    <button class="btn btn-primary" type="submit" name="button" value="clear_button">Clear</button>
-    <button class="btn btn-primary" type="submit" name="button" value="submit_button">Submit</button>
+    <button
+        class="btn btn-primary"
+        type="submit"
+        name="button"
+        value="clear_button"
+    >
+        Clear
+    </button>
+    <button
+        class="btn btn-primary"
+        type="submit"
+        name="button"
+        value="submit_button"
+    >
+        Submit
+    </button>
 </form>
-
 
 {% endblock %}
