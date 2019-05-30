@@ -6,15 +6,15 @@ import json
 
 from django.views.generic import TemplateView
 from django.shortcuts import render
+from django.shortcuts import redirect
 # from django.template import loader
 from django.http import Http404
 from django.http import HttpResponse
-
 from PIL import Image
 
-from .forms import MotoInputForm
-from .models import CMotorcycles
-from .script.scraper import run
+from ..forms import MotoInputForm
+from ..models import CMotorcycles
+from ..script.scraper import run
 
 
 class MotoView(TemplateView):
@@ -85,7 +85,7 @@ class MotoView(TemplateView):
             Start scraper.py script
         """
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path_to_file = os.path.join(dir_path, "script/config.json")
+        path_to_file = os.path.join(dir_path, "../script/config.json")
 
         # create config.json
         json_dict = {"vehicle": []}
@@ -106,40 +106,4 @@ class MotoView(TemplateView):
 
         # create table in database and send some to html
         moto_data_base.to_sql()
-        no_of_rows = 10
-        motorcycles = CMotorcycles.objects.all()[:no_of_rows]
-        context = {'moto_to_scrap': self.moto_to_scrap,
-                   'CMotorcycles': motorcycles,
-                   'no_of_rows': no_of_rows}
-        return render(request, self.next_template_name, context)
-# ----------------------------------------------------
-# ----------------------------------------------------
-
-
-def show_graphs(request):
-    """
-        Simply return a static image as a png
-    """
-    print('-----------------------dupa')
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    path_to_image = os.path.join(dir_path, "script/graph/barplot.png")
-    Image.init()
-    i = Image.open(path_to_image)
-
-    response = HttpResponse(mimetype='image/png')
-    i.save(response, 'PNG')
-    return response
-
-
-def detail_moto(request, idx):
-    """
-        show detailed info about motorycycle
-    """
-    pass
-# try:
-#     detail = CMotorcycles.objects.get(pk=idx)
-#     print(detail)
-# except CMotorcycles.DoesNotExist:
-#     raise Http404("Moto with ID {} does not exist".format(idx))
-# return render(request, 'moto/detail.html', {'detail': detail})
-# return HttpResponse("Detailed information on moto ID {}".format(idx))
+        return redirect('detail')

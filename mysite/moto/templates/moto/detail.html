@@ -2,12 +2,26 @@
 <title>MotoScrapper - results</title>
 <div>
     <h2>This page contains results of your search</h2>
-    <p>To go back click <a href="">here</a></p>
+    <p>To go back click <a href="moto/">here</a></p>
 </div>
 {% endblock %} {% block body %}
-<div class="row">
+<div class="container-fluid">
     <div class="col-sm-8">
-        {% if moto_to_scrap %}
+        <p>Total number of motorcycles : {{ form.max_value }}</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ form }}
+            <button
+                class="btn btn-primary"
+                type="submit"
+                name="button"
+                value="show_button"
+            >
+                Show
+            </button>
+        </form>
+
+        {% if no_of_rows %}
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -34,9 +48,18 @@
         <p>No data to show</p>
         {% endif %}
     </div>
-    <div class="col-sm-4">
-        <h2>Graphs</h2>
-        <img src="barplot.png" width="500px" />
+    <h2>Graphs</h2>
+    <div class="row">
+        <div class="col-sm">
+            {% load static %}
+            <img src="{% static 'graph/barplot.png' %}" alt="Bar plot" />
+        </div>
+        <div class="col-sm">
+            <img src="{% static 'graph/simpleplot.png' %}" alt="Simple plot" />
+        </div>
+        <div class="col-sm">
+            <img src="{% static 'graph/heatmapplot.png' %}" alt="Heat Map" />
+        </div>
     </div>
 </div>
 {% endblock %}

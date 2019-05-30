@@ -2,9 +2,9 @@
 mysite/moto/__pycache__/*.pyc
 mysite/moto/migrations/**
 mysite/moto/script/__pycache__/**
-
+mysite/moto/static/graph**
 mysite/mysite/__pycache__/**
 mysite/mysite/migrations/**
 
-
-mysite/db.sqlite3
+*.pyc
+db.sqlite3

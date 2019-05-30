@@ -264,6 +264,8 @@ class CPlotter(object):
         sns.lmplot(x, y, self.df, hue='model')
         plt.ylim(0, 10000)
         plt.xlim(1980, 2019)
+        plt.savefig("moto/static/graph/simpleplot.png")
+        plt.clf()
 
     def heatmapPlot(self):
         # Calculate correlations
@@ -271,13 +273,14 @@ class CPlotter(object):
         corr.drop('id')
         # Heatmap
         sns.heatmap(corr)
-        plt.show()
+        plt.savefig("moto/static/graph/heatmapplot.png")
+        plt.clf()
 
     def barPlot(self, x):
         sns.countplot(x=x, hue='model', data=self.df)
         plt.xticks(rotation=-45)
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-        plt.savefig("moto/script/graph/barplot.png")
+        plt.savefig("moto/static/graph/barplot.png")
         plt.clf()
 
 
@@ -287,13 +290,13 @@ def run():
     motoDatabase = CDatabase(motoList)
     motoDatabase.showRecords()
 
-    print('Total number of parsed motorcycles : {}'.format(CMoto.numberOfMotors))
-    print('Model not specified in {0} offerts'.format(
-        CMoto.counterModelNotSpecified))
+    # print('Total number of parsed motorcycles : {}'.format(CMoto.numberOfMotors))
+    # print('Model not specified in {0} offerts'.format(
+    #     CMoto.counterModelNotSpecified))
 
     plotter = CPlotter(motoDatabase)
-    # plotter.simplePlot('prodDate', 'price')
-    # plotter.heatmapPlot()
+    plotter.simplePlot('prodDate', 'price')
+    plotter.heatmapPlot()
     plotter.barPlot('prodDate')
     return motoDatabase
 
